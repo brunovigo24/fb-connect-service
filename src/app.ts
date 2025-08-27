@@ -9,6 +9,7 @@ import { errorHandler } from './middlewares/errorHandler';
 import { requestLogger } from './middlewares/requestLogger';
 import authRoutes from './routes/authRoutes';
 import postRoutes from './routes/postRoutes';
+import protectedRoutes from './routes/protectedRoutes';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
+app.use('/', protectedRoutes);
 
 app.use(errorHandler);
 

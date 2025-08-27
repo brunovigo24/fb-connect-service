@@ -25,10 +25,27 @@ npm run dev
 npm run build && npm start
 ```
 
+### Banco de Dados
+Manual (MySQL já instalado):
+```sql
+CREATE DATABASE IF NOT EXISTS fb_connect_service CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Execute o conteúdo de db/schema.sql
+```
+
+Ajuste o `.env` para apontar para as credenciais:
+```
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=app
+DB_PASSWORD=app
+DB_NAME=fb_connect_service
+```
+
 ### Rotas
 - `GET /health`: verificação
 - `GET /auth/facebook/login`: redireciona para o Facebook OAuth
 - `GET /auth/facebook/callback`: troca `code` por `access_token`, persiste usuário, token e páginas
+- `POST /auth`: recebe `{ client_id, client_secret }` e retorna JWT
 - `POST /posts/page/:pageId`: cria uma postagem na página
 - `POST /posts/page/:pageId/bulk`: cria múltiplas postagens sequenciais
 
@@ -39,6 +56,7 @@ npm run build && npm start
 - `src/shared/database`: TypeORM DataSource
 - `src/users | tokens | pages`: entidades TypeORM
 - `src/middlewares`: logs e tratamento de erros
+- `src/clients`: entidade e serviço para clientes (sistemas) que consomem a API
 - `src/webhooks` (placeholder): estrutura para futuros webhooks
 - `src/jobs` (placeholder): estrutura para filas/jobs
 - `src/auth` (placeholder): estrutura para JWT/API Gateway
@@ -46,4 +64,5 @@ npm run build && npm start
 ### Notas
 - TypeORM `synchronize: true` para facilitar desenvolvimento (não usar em produção sem migrações)
 - Tokens de usuário podem ser trocados por long-lived via `tokenService.refreshUserToken`
+- JWT: defina `JWT_SECRET` e `JWT_EXPIRES_IN` no `.env`
 

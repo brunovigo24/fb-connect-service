@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { User } from '../../users/entities/User';
 import { Token } from '../../tokens/entities/Token';
 import { Page } from '../../pages/entities/Page';
+import { Client } from '../../clients/entities/Client';
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'fb_connect_service',
-  entities: [User, Token, Page],
+  entities: [User, Token, Page, Client],
   synchronize: true,
   logging: false,
 });
