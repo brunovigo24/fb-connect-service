@@ -1,7 +1,8 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn, Unique } from 'typeorm';
 import { User } from '../../users/entities/User';
 
 @Entity('tokens')
+@Unique(['user', 'provider'])
 export class Token {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -12,10 +13,10 @@ export class Token {
   @Column()
   provider!: 'facebook';
 
-  @Column()
+  @Column({ type: 'text' })
   accessToken!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   refreshToken?: string;
 
   @Column({ type: 'bigint', nullable: true })

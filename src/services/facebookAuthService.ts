@@ -12,13 +12,27 @@ const APP_ID = process.env.FACEBOOK_APP_ID as string;
 const APP_SECRET = process.env.FACEBOOK_APP_SECRET as string;
 const REDIRECT_URI = process.env.FACEBOOK_REDIRECT_URI as string;
 
-export function buildFacebookAuthURL(): string {
-  const scope = ['public_profile', 'email', 'pages_manage_posts', 'pages_show_list', 'pages_read_engagement', 'pages_manage_metadata', 'pages_read_user_content', 'pages_manage_engagement', 'pages_manage_ads'].join(',');
+export function buildFacebookAuthURL(state?: string): string {
+  const DEFAULT_SCOPES = [
+    'public_profile',
+    'email',
+    'pages_manage_posts',
+    'pages_show_list',
+    'pages_read_engagement',
+    'pages_manage_metadata',
+    'pages_read_user_content',
+    'pages_manage_engagement',
+  ];
+  const scopeEnv = process.env.FACEBOOK_SCOPES;
+  const scope = (scopeEnv ? scopeEnv.split(',').map(s => s.trim()).filter(Boolean) : DEFAULT_SCOPES).join(',');
   const url = new URL(`https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth`);
   url.searchParams.set('client_id', APP_ID);
   url.searchParams.set('redirect_uri', REDIRECT_URI);
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('scope', scope);
+  if (state) {
+    url.searchParams.set('state', state);
+  }
   return url.toString();
 }
 
@@ -49,7 +63,13 @@ export async function handleFacebookCallback(code: string): Promise<{ user: User
   }
 
   const expiresAt = Date.now() + (expiresIn ? expiresIn * 1000 : 0);
-  const token = tokenRepo.create({ user, provider: 'facebook', accessToken, expiresAt: String(expiresAt) });
+  let token = await tokenRepo.findOne({ where: { user: { id: user.id }, provider: 'facebook' }, relations: { user: true } });
+  if (!token) {
+    token = tokenRepo.create({ user, provider: 'facebook', accessToken, expiresAt: String(expiresAt) });
+  } else {
+    token.accessToken = accessToken;
+    token.expiresAt = String(expiresAt);
+  }
   await tokenRepo.save(token);
 
   // Buscar páginas gerenciadas pelo usuário e armazená-las com tokens de acesso à página

@@ -15,7 +15,7 @@ export class Page {
   @Column({ nullable: true })
   pageName?: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   pageAccessToken?: string;
 
   @CreateDateColumn()

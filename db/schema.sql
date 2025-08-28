@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS `tokens` (
   `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_tokens_user_provider` (`userId`, `provider`),
   KEY `IDX_tokens_userId` (`userId`),
   CONSTRAINT `FK_tokens_user` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
