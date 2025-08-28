@@ -45,7 +45,16 @@ export async function handleFacebookCallback(code: string): Promise<{ user: User
   tokenUrl.searchParams.set('code', code);
 
   const tokenRes = await axios.get(tokenUrl.toString());
-  const { access_token: accessToken, token_type: _tokenType, expires_in: expiresIn } = tokenRes.data as { access_token: string; token_type: string; expires_in: number };
+  const { access_token: shortLivedToken } = tokenRes.data as { access_token: string; token_type: string; expires_in: number };
+
+  // Troque token de curta duração por token de longa duração
+  const exchangeUrl = new URL(`https://graph.facebook.com/${GRAPH_VERSION}/oauth/access_token`);
+  exchangeUrl.searchParams.set('grant_type', 'fb_exchange_token');
+  exchangeUrl.searchParams.set('client_id', APP_ID);
+  exchangeUrl.searchParams.set('client_secret', APP_SECRET);
+  exchangeUrl.searchParams.set('fb_exchange_token', shortLivedToken);
+  const exchangeRes = await axios.get(exchangeUrl.toString());
+  const { access_token: accessToken, token_type: _llType, expires_in: expiresIn } = exchangeRes.data as { access_token: string; token_type: string; expires_in: number };
 
   // Obter perfil do usuário
   const meUrl = `https://graph.facebook.com/${GRAPH_VERSION}/me?fields=id,name,email&access_token=${encodeURIComponent(accessToken)}`;

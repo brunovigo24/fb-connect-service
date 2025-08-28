@@ -45,9 +45,11 @@ DB_NAME=fb_connect_service
 - `GET /health`: verificação
 - `GET /auth/facebook/login`: redireciona para o Facebook OAuth
 - `GET /auth/facebook/callback`: troca `code` por `access_token`, persiste usuário, token e páginas
+  - Agora troca automaticamente token curto por long-lived e grava o vencimento
 - `POST /auth`: recebe `{ client_id, client_secret }` e retorna JWT
 - `POST /posts/page/:pageId`: cria uma postagem na página
 - `POST /posts/page/:pageId/bulk`: cria múltiplas postagens sequenciais
+  - Caso o token de página esteja inválido/expirado (erro 190), o serviço obtém token long-lived do usuário, reobtém token da página e tenta novamente uma vez
 
 ### Estrutura
 - `src/controllers`: controladores HTTP

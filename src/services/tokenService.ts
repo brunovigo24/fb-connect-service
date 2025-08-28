@@ -23,7 +23,7 @@ export async function getValidUserToken(userId: string): Promise<Token | null> {
 }
 
 export async function refreshUserToken(token: Token): Promise<Token> {
-  // Troque token de curta duração por token de longa duração
+  // Troque token de curta duração por token de longa duração, ou renove long-lived
   const url = new URL(`https://graph.facebook.com/${GRAPH_VERSION}/oauth/access_token`);
   url.searchParams.set('grant_type', 'fb_exchange_token');
   url.searchParams.set('client_id', APP_ID);
