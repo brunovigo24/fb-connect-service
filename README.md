@@ -66,3 +66,6 @@ DB_NAME=fb_connect_service
 - Tokens de usuário podem ser trocados por long-lived via `tokenService.refreshUserToken`
 - JWT: defina `JWT_SECRET` e `JWT_EXPIRES_IN` no `.env`
 
+---
+
+Desenvolvido por [Bruno Vigo](https://www.linkedin.com/in/bruno-vigo).
