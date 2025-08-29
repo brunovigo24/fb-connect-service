@@ -86,7 +86,7 @@ export async function createPagePost({ pageId, message, link, mediaUrl }: Create
 export async function createBulkPagePosts(pageId: string, posts: Array<{ message?: string; link?: string; mediaUrl?: string }>): Promise<any[]> {
   const results: any[] = [];
   for (const post of posts) {
-    // No futuro: enfileiramento de tarefas. Por enquanto: sequencial.
+    // Processamento sequencial
     const created = await createPagePost({ pageId, ...post });
     results.push(created);
   }

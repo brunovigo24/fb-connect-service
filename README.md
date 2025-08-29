@@ -60,7 +60,6 @@ DB_NAME=fb_connect_service
 - `src/middlewares`: logs e tratamento de erros
 - `src/clients`: entidade e serviço para clientes (sistemas) que consomem a API
 - `src/webhooks` (placeholder): estrutura para futuros webhooks
-- `src/jobs` (placeholder): estrutura para filas/jobs
 - `src/auth` (placeholder): estrutura para JWT/API Gateway
 
 ### Notas
