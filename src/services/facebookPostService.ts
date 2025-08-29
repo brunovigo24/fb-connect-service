@@ -62,6 +62,7 @@ export async function createPagePost({ pageId, message, link, mediaUrl }: Create
   } catch (e) {
     const err = e as AxiosError<any>;
     const code = err.response?.data?.error?.code;
+    const message = err.response?.data?.error?.message as string | undefined;
     if (code === 190) {
       // token de página inválido/expirado → atualizar token de usuário + token de página e tentar novamente uma vez
       page = await refreshPageAccessToken(page);
@@ -72,6 +73,11 @@ export async function createPagePost({ pageId, message, link, mediaUrl }: Create
         },
       });
       return retry.data;
+    }
+    if (code === 613 || code === 4) {
+      // Rate limit 
+      const friendly = 'Facebook rate limit exceeded. Reduce batch size or try again later.';
+      throw Object.assign(new Error(friendly), { status: 429, providerCode: code, providerMessage: message });
     }
     throw err;
   }
