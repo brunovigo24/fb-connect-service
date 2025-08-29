@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../users/entities/User';
+import { Client } from '../../clients/entities/Client';
 
 @Entity('pages')
 export class Page {
@@ -17,6 +18,9 @@ export class Page {
 
   @Column({ type: 'text', nullable: true })
   pageAccessToken?: string;
+
+  @ManyToOne(() => Client, { nullable: true, onDelete: 'SET NULL' })
+  client?: Client;
 
   @CreateDateColumn()
   createdAt!: Date;

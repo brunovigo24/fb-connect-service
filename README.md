@@ -51,6 +51,10 @@ DB_NAME=fb_connect_service
 - `POST /posts/page/:pageId/bulk`: cria múltiplas postagens sequenciais
   - Caso o token de página esteja inválido/expirado (erro 190), o serviço obtém token long-lived do usuário, reobtém token da página e tenta novamente uma vez
 
+- Webhooks (Facebook):
+  - `GET /webhooks/facebook`: verificação (hub.challenge) com `FB_WEBHOOK_VERIFY_TOKEN`
+  - `POST /webhooks/facebook`: recebe eventos (leads, comentários, mensagens). Valida `X-Hub-Signature-256` com `FACEBOOK_APP_SECRET` e encaminha ao `webhookCallbackUrl` do client correspondente (quando configurado)
+
 ### Estrutura
 - `src/controllers`: controladores HTTP
 - `src/services`: integração com Graph API e regras de negócio
@@ -60,6 +64,7 @@ DB_NAME=fb_connect_service
 - `src/middlewares`: logs e tratamento de erros
 - `src/clients`: entidade e serviço para clientes (sistemas) que consomem a API
 - `src/webhooks` (placeholder): estrutura para futuros webhooks
+  - `src/routes/webhookRoutes.ts` e `src/webhooks/facebookWebhookController.ts`
 - `src/auth` (placeholder): estrutura para JWT/API Gateway
 
 ### Notas

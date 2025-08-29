@@ -10,13 +10,25 @@ import { requestLogger } from './middlewares/requestLogger';
 import { requestId } from './middlewares/requestId';
 import authRoutes from './routes/authRoutes';
 import postRoutes from './routes/postRoutes';
+import webhookRoutes from './routes/webhookRoutes';
 import protectedRoutes from './routes/protectedRoutes';
 
 dotenv.config();
 
 const app = express();
 
-app.use(express.json());
+// Montar body para verificação de assinatura de webhooks ANTES do analisador JSON
+app.use('/webhooks/facebook', express.raw({ type: '*/*' }));
+
+// anexar body bruto à solicitação para verificação posterior
+app.use((req, _res, next) => {
+  const anyReq = req as any;
+  if (anyReq.body && Buffer.isBuffer(anyReq.body)) {
+    anyReq.rawBody = anyReq.body;
+  }
+  next();
+});
+app.use(express.json({ limit: '1mb' }));
 app.use(cors());
 app.use(helmet());
 const morganLib = morgan as any;
@@ -33,6 +45,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
+app.use('/webhooks', webhookRoutes);
 app.use('/', protectedRoutes);
 
 app.use(errorHandler);

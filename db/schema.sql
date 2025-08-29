@@ -34,10 +34,25 @@ CREATE TABLE IF NOT EXISTS `tokens` (
   CONSTRAINT `FK_tokens_user` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- clients
+CREATE TABLE IF NOT EXISTS `clients` (
+  `id` CHAR(36) NOT NULL,
+  `clientId` VARCHAR(128) NOT NULL,
+  `clientSecret` VARCHAR(255) NOT NULL,
+  `name` VARCHAR(255) NOT NULL,
+  `scopes` JSON NULL,
+  `webhookCallbackUrl` VARCHAR(1024) NULL,
+  `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UQ_clients_clientId` (`clientId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- pages
 CREATE TABLE IF NOT EXISTS `pages` (
   `id` CHAR(36) NOT NULL,
   `userId` CHAR(36) NOT NULL,
+  `clientId` CHAR(36) NULL,
   `pageId` VARCHAR(64) NOT NULL,
   `pageName` VARCHAR(255) NULL,
   `pageAccessToken` TEXT NULL,
@@ -46,20 +61,9 @@ CREATE TABLE IF NOT EXISTS `pages` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_pages_user_page` (`userId`, `pageId`),
   KEY `IDX_pages_userId` (`userId`),
-  CONSTRAINT `FK_pages_user` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- clients
-CREATE TABLE IF NOT EXISTS `clients` (
-  `id` CHAR(36) NOT NULL,
-  `clientId` VARCHAR(128) NOT NULL,
-  `clientSecret` VARCHAR(255) NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `scopes` JSON NULL,
-  `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UQ_clients_clientId` (`clientId`)
+  KEY `IDX_pages_clientId` (`clientId`),
+  CONSTRAINT `FK_pages_user` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `FK_pages_client` FOREIGN KEY (`clientId`) REFERENCES `clients`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 

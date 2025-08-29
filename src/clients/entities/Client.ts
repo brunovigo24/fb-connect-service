@@ -17,6 +17,9 @@ export class Client {
   @Column({ type: 'json', nullable: true })
   scopes?: string[];
 
+  @Column({ nullable: true })
+  webhookCallbackUrl?: string;
+
   @CreateDateColumn()
   createdAt!: Date;
 
