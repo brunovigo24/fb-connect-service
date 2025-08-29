@@ -42,6 +42,10 @@ DB_NAME=fb_connect_service
 ```
 
 ### Rotas
+- Documentação (Swagger)
+  - UI: `GET /docs`
+  - JSON: `GET /docs-json`
+  - Edite `src/docs/openapi.json` para manter a documentação em dia
 - `GET /health`: verificação
 - `GET /auth/facebook/login`: redireciona para o Facebook OAuth
 - `GET /auth/facebook/callback`: troca `code` por `access_token`, persiste usuário, token e páginas

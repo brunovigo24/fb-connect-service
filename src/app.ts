@@ -11,6 +11,8 @@ import { requestId } from './middlewares/requestId';
 import authRoutes from './routes/authRoutes';
 import postRoutes from './routes/postRoutes';
 import webhookRoutes from './routes/webhookRoutes';
+import swaggerUi from 'swagger-ui-express';
+import openapiSpec from './docs/openapi.json';
 import protectedRoutes from './routes/protectedRoutes';
 
 dotenv.config();
@@ -46,6 +48,10 @@ app.get('/health', (_req, res) => {
 app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
 app.use('/webhooks', webhookRoutes);
+
+// Docs
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
+app.get('/docs-json', (_req, res) => res.json(openapiSpec));
 app.use('/', protectedRoutes);
 
 app.use(errorHandler);

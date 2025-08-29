@@ -1,0 +1,98 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Facebook Connect Service",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "http://localhost:4000" }
+  ],
+  "paths": {
+    "/health": {
+      "get": { "summary": "Health check", "responses": { "200": { "description": "OK" } } }
+    },
+    "/auth": {
+      "post": {
+        "summary": "Issue JWT for client",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "client_id": { "type": "string" },
+                  "client_secret": { "type": "string" }
+                },
+                "required": ["client_id", "client_secret"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "JWT issued" }, "401": { "description": "Invalid credentials" } }
+      }
+    },
+    "/auth/facebook/login": { "get": { "summary": "Start Facebook OAuth", "parameters": [ {"name":"state","in":"query","schema":{"type":"string"}} ], "responses": { "302": { "description": "Redirect to Facebook" } } } },
+    "/auth/facebook/callback": { "get": { "summary": "Facebook OAuth callback", "responses": { "200": { "description": "Done" } } } },
+    "/posts/page/{pageId}": {
+      "post": {
+        "summary": "Create a page post",
+        "parameters": [ {"name":"pageId","in":"path","required":true,"schema":{"type":"string"}} ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": { "type": "string" },
+                  "link": { "type": "string" },
+                  "mediaUrl": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Created" }, "401": { "description": "Unauthorized" }, "429": { "description": "Rate limited" } },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/posts/page/{pageId}/bulk": {
+      "post": {
+        "summary": "Create multiple page posts",
+        "parameters": [ {"name":"pageId","in":"path","required":true,"schema":{"type":"string"}} ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PagePost" } }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Created" }, "401": { "description": "Unauthorized" }, "429": { "description": "Rate limited" } },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/webhooks/facebook": {
+      "get": { "summary": "Verify webhook", "parameters": [ {"name":"hub.mode","in":"query","schema":{"type":"string"}}, {"name":"hub.verify_token","in":"query","schema":{"type":"string"}}, {"name":"hub.challenge","in":"query","schema":{"type":"string"}} ], "responses": { "200": { "description": "Challenge" }, "403": { "description": "Forbidden" } } },
+      "post": { "summary": "Receive webhook event", "responses": { "200": { "description": "Accepted" }, "401": { "description": "Invalid signature" } } }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PagePost": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" },
+          "link": { "type": "string" },
+          "mediaUrl": { "type": "string" }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
