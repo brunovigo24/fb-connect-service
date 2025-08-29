@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 
 import { errorHandler } from './middlewares/errorHandler';
 import { requestLogger } from './middlewares/requestLogger';
+import { requestId } from './middlewares/requestId';
 import authRoutes from './routes/authRoutes';
 import postRoutes from './routes/postRoutes';
 import protectedRoutes from './routes/protectedRoutes';
@@ -18,7 +19,12 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
-app.use(morgan(process.env.LOG_LEVEL || 'dev'));
+const morganLib = morgan as any;
+morganLib.token('id', (req: any) => req.requestId || '-');
+morganLib.token('clientId', (req: any) => req.client?.clientId || '-');
+morganLib.token('clientName', (req: any) => req.client?.name || '-');
+app.use(requestId);
+app.use(morgan(':method :url :status - :response-time ms [id=:id] [client=:clientId::clientName]'));
 app.use(requestLogger);
 
 app.get('/health', (_req, res) => {

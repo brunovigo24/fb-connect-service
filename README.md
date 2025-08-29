@@ -64,6 +64,9 @@ DB_NAME=fb_connect_service
 - `src/auth` (placeholder): estrutura para JWT/API Gateway
 
 ### Notas
+- Logs em produção
+  - Cada requisição recebe um `requestId` e os logs incluem `[id=<uuid>] [client=<clientId>::<name>]` quando autenticado via JWT.
+  - Para visualizar logs no Docker/k8s: `docker logs <container>` ou via agregadores (Loki/ELK/Cloud Logging). Configure `LOG_LEVEL` para ajustar o formato do morgan se desejar.
 - TypeORM `synchronize: true` para facilitar desenvolvimento (não usar em produção sem migrações)
 - Tokens de usuário podem ser trocados por long-lived via `tokenService.refreshUserToken`
 - JWT: defina `JWT_SECRET` e `JWT_EXPIRES_IN` no `.env`
