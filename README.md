@@ -57,7 +57,9 @@ DB_NAME=fb_connect_service
 
 - Webhooks (Facebook):
   - `GET /webhooks/facebook`: verificação (hub.challenge) com `FB_WEBHOOK_VERIFY_TOKEN`
-  - `POST /webhooks/facebook`: recebe eventos (leads, comentários, mensagens). Valida `X-Hub-Signature-256` com `FACEBOOK_APP_SECRET` e encaminha ao `webhookCallbackUrl` do client correspondente (quando configurado)
+  - `POST /webhooks/facebook`: recebe eventos (leads, comentários, mensagens). Valida `X-Hub-Signature-256` com `FACEBOOK_APP_SECRET` e persiste os eventos no banco (`webhook_events`)
+  - `GET /webhooks/events`: lista eventos armazenados (JWT)
+  - `GET /webhooks/events/{id}`: detalha evento (JWT)
 
 ### Estrutura
 - `src/controllers`: controladores HTTP

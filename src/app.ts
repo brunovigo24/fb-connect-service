@@ -11,6 +11,7 @@ import { requestId } from './middlewares/requestId';
 import authRoutes from './routes/authRoutes';
 import postRoutes from './routes/postRoutes';
 import webhookRoutes from './routes/webhookRoutes';
+import webhookEventRoutes from './routes/webhookEventRoutes';
 import swaggerUi from 'swagger-ui-express';
 import openapiSpec from './docs/openapi.json';
 import protectedRoutes from './routes/protectedRoutes';
@@ -48,6 +49,7 @@ app.get('/health', (_req, res) => {
 app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
 app.use('/webhooks', webhookRoutes);
+app.use('/webhooks/events', webhookEventRoutes);
 
 // Docs
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));

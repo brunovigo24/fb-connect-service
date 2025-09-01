@@ -5,6 +5,7 @@ import { User } from '../../users/entities/User';
 import { Token } from '../../tokens/entities/Token';
 import { Page } from '../../pages/entities/Page';
 import { Client } from '../../clients/entities/Client';
+import { WebhookEvent } from '../../webhooks/entities/WebhookEvent';
 
 dotenv.config();
 
@@ -15,7 +16,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'fb_connect_service',
-  entities: [User, Token, Page, Client],
+  entities: [User, Token, Page, Client, WebhookEvent],
   synchronize: true,
   logging: false,
 });

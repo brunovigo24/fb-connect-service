@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import { AppDataSource } from '../shared/database/dataSource';
 import { Page } from '../pages/entities/Page';
+import { WebhookEvent } from './entities/WebhookEvent';
 
 dotenv.config();
 
@@ -51,15 +52,20 @@ export async function receiveWebhook(req: Request, res: Response, next: NextFunc
     }
 
     const pageRepo = AppDataSource.getRepository(Page);
-    // Processar entradas e encaminhar por ID de página
+    const eventRepo = AppDataSource.getRepository(WebhookEvent);
+    // Processar entradas e persistir por ID de página
     for (const entry of body.entry) {
       const pageId = entry.id as string | undefined;
       if (!pageId) continue;
       const page = await pageRepo.findOne({ where: { pageId }, relations: { client: true } });
-      const callbackUrl = page?.client?.webhookCallbackUrl;
-      if (!callbackUrl) continue;
-      // Encaminhar evento para retorno de chamada do cliente
-      await axios.post(callbackUrl, entry, { timeout: 5000 }).catch(() => undefined);
+      const event = eventRepo.create({
+        page: page || null,
+        client: page?.client || null,
+        facebookPageId: pageId,
+        eventType: entry.changes?.[0]?.field || 'page_event',
+        payload: entry,
+      });
+      await eventRepo.save(event);
     }
 
     res.sendStatus(200);

@@ -75,6 +75,28 @@
       "get": { "summary": "Verify webhook", "parameters": [ {"name":"hub.mode","in":"query","schema":{"type":"string"}}, {"name":"hub.verify_token","in":"query","schema":{"type":"string"}}, {"name":"hub.challenge","in":"query","schema":{"type":"string"}} ], "responses": { "200": { "description": "Challenge" }, "403": { "description": "Forbidden" } } },
       "post": { "summary": "Receive webhook event", "responses": { "200": { "description": "Accepted" }, "401": { "description": "Invalid signature" } } }
     }
+    ,
+    "/webhooks/events": {
+      "get": {
+        "summary": "List stored webhook events",
+        "parameters": [
+          {"name":"pageId","in":"query","schema":{"type":"string"}},
+          {"name":"since","in":"query","schema":{"type":"string","format":"date-time"}},
+          {"name":"until","in":"query","schema":{"type":"string","format":"date-time"}},
+          {"name":"limit","in":"query","schema":{"type":"integer","default":50}}
+        ],
+        "responses": { "200": { "description": "Events" }, "401": { "description": "Unauthorized" } },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/webhooks/events/{id}": {
+      "get": {
+        "summary": "Get event by ID",
+        "parameters": [ {"name":"id","in":"path","required":true,"schema":{"type":"string"}} ],
+        "responses": { "200": { "description": "Event" }, "401": { "description": "Unauthorized" }, "404": { "description": "Not found" } },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    }
   },
   "components": {
     "schemas": {

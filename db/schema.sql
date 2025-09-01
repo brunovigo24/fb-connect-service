@@ -48,6 +48,22 @@ CREATE TABLE IF NOT EXISTS `clients` (
   UNIQUE KEY `UQ_clients_clientId` (`clientId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- webhook_events
+CREATE TABLE IF NOT EXISTS `webhook_events` (
+  `id` CHAR(36) NOT NULL,
+  `pageId` CHAR(36) NULL,
+  `clientId` CHAR(36) NULL,
+  `facebookPageId` VARCHAR(64) NOT NULL,
+  `eventType` VARCHAR(128) NULL,
+  `payload` JSON NOT NULL,
+  `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  KEY `IDX_webhook_events_pageId` (`pageId`),
+  KEY `IDX_webhook_events_clientId` (`clientId`),
+  CONSTRAINT `FK_webhook_events_page` FOREIGN KEY (`pageId`) REFERENCES `pages`(`id`) ON DELETE SET NULL,
+  CONSTRAINT `FK_webhook_events_client` FOREIGN KEY (`clientId`) REFERENCES `clients`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- pages
 CREATE TABLE IF NOT EXISTS `pages` (
   `id` CHAR(36) NOT NULL,
