@@ -26,14 +26,20 @@ const app = express();
 // Montar body para verificação de assinatura de webhooks ANTES do analisador JSON
 app.use('/webhooks/facebook', express.raw({ type: '*/*' }));
 
-// anexar body bruto à solicitação para verificação posterior
-app.use((req, _res, next) => {
+// anexar body bruto à solicitação para verificação posterior e converter para JSON
+app.use('/webhooks/facebook', (req, _res, next) => {
   const anyReq = req as any;
   if (anyReq.body && Buffer.isBuffer(anyReq.body)) {
     anyReq.rawBody = anyReq.body;
+    try {
+      anyReq.body = JSON.parse(anyReq.body.toString());
+    } catch (err) {
+      console.error('Error parsing webhook body:', err);
+    }
   }
   next();
 });
+
 app.use(express.json({ limit: '1mb' }));
 app.use(cors());
 app.use(helmet());

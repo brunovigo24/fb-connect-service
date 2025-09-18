@@ -53,10 +53,12 @@ export async function receiveWebhook(req: Request, res: Response, next: NextFunc
 
     const pageRepo = AppDataSource.getRepository(Page);
     const eventRepo = AppDataSource.getRepository(WebhookEvent);
+    
     // Processar entradas e persistir por ID de página
     for (const entry of body.entry) {
       const pageId = entry.id as string | undefined;
       if (!pageId) continue;
+      
       const page = await pageRepo.findOne({ where: { pageId }, relations: { client: true } });
       const event = eventRepo.create({
         page: page || null,
