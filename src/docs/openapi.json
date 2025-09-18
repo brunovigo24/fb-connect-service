@@ -2,18 +2,374 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Facebook Connect Service",
-    "version": "1.0.0"
+    "description": "Microserviço para centralizar integrações com Facebook Graph API. Permite autenticação OAuth2, gerenciamento de tokens e postagens em páginas do Facebook.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Bruno Vigo",
+      "url": "https://www.linkedin.com/in/bruno-vigo"
+    }
   },
   "servers": [
-    { "url": "http://localhost:4000" }
+    { "url": "http://localhost:4000", "description": "Desenvolvimento Local" },
+    { "url": "https://844c4f5bbd8a.ngrok-free.app", "description": "Desenvolvimento via ngrok" }
   ],
   "paths": {
     "/health": {
-      "get": { "summary": "Health check", "responses": { "200": { "description": "OK" } } }
+      "get": { 
+        "summary": "Health check", 
+        "description": "Verifica o status de saúde do serviço",
+        "tags": ["System"],
+        "responses": { 
+          "200": { 
+            "description": "Serviço funcionando normalmente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "ok"
+                }
+              }
+            }
+          } 
+        } 
+      }
     },
     "/auth": {
       "post": {
-        "summary": "Issue JWT for client",
+        "summary": "Gerar token JWT para cliente",
+        "description": "Autentica um sistema cliente e retorna um token JWT para acesso às APIs",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientCredentials"
+              },
+              "example": {
+                "client_id": "test-client-id",
+                "client_secret": "test-client-secret"
+              }
+            }
+          }
+        },
+        "responses": { 
+          "200": { 
+            "description": "Token JWT gerado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                },
+                "example": {
+                  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                  "token_type": "Bearer"
+                }
+              }
+            }
+          }, 
+          "400": { 
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": { 
+            "description": "Credenciais inválidas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/facebook/login": { 
+      "get": { 
+        "summary": "Iniciar OAuth do Facebook", 
+        "description": "Redireciona o usuário para o Facebook para autorização OAuth2. O usuário será redirecionado de volta para o callback após autorizar o acesso às páginas.",
+        "tags": ["Facebook OAuth"],
+        "parameters": [ 
+          {
+            "name":"state",
+            "in":"query",
+            "description": "URL de redirecionamento após autorização (opcional)",
+            "schema":{"type":"string"},
+            "example": "https://meusite.com/callback"
+          } 
+        ], 
+        "responses": { 
+          "302": { 
+            "description": "Redirecionamento para o Facebook OAuth" 
+          } 
+        } 
+      } 
+    },
+    "/auth/facebook/callback": { 
+      "get": { 
+        "summary": "Callback do OAuth Facebook", 
+        "description": "Endpoint chamado pelo Facebook após autorização. Processa o código de autorização, troca por token de acesso, salva dados do usuário e páginas. Redireciona para URL especificada no parâmetro 'state' ou fecha a janela.",
+        "tags": ["Facebook OAuth"],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "description": "Código de autorização do Facebook",
+            "schema": {"type": "string"}
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "URL de redirecionamento",
+            "schema": {"type": "string"}
+          }
+        ],
+        "responses": { 
+          "200": { 
+            "description": "Autorização processada com sucesso. Retorna HTML que fecha a janela (quando não há parâmetro 'state' válido)." 
+          },
+          "302": {
+            "description": "Redirecionamento para URL especificada no parâmetro 'state' (quando state é uma URL válida)"
+          },
+          "400": {
+            "description": "Código de autorização ausente ou inválido"
+          }
+        } 
+      } 
+    },
+    "/posts/page/{pageId}": {
+      "post": {
+        "summary": "Criar postagem em página",
+        "description": "Cria uma nova postagem na página do Facebook especificada",
+        "tags": ["Posts"],
+        "parameters": [ 
+          {
+            "name":"pageId",
+            "in":"path",
+            "required":true,
+            "description": "ID da página do Facebook",
+            "schema":{"type":"string"},
+            "example": "795021823690841"
+          } 
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PagePost"
+              },
+              "example": {
+                "message": "🚀 Teste do microserviço Facebook Connect! Sistema funcionando perfeitamente.",
+                "link": "https://github.com",
+                "mediaUrl": "https://example.com/image.jpg"
+              }
+            }
+          }
+        },
+        "responses": { 
+          "201": { 
+            "description": "Postagem criada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostResponse"
+                },
+                "example": {
+                  "id": "795021823690841_122112213224990091"
+                }
+              }
+            }
+          }, 
+          "400": {
+            "description": "Dados da postagem inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": { 
+            "description": "Token de autenticação inválido ou ausente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }, 
+          "404": {
+            "description": "Página não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": { 
+            "description": "Rate limit do Facebook atingido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/posts/page/{pageId}/bulk": {
+      "post": {
+        "summary": "Criar múltiplas postagens",
+        "description": "Cria múltiplas postagens sequenciais na página do Facebook especificada",
+        "tags": ["Posts"],
+        "parameters": [ 
+          {
+            "name":"pageId",
+            "in":"path",
+            "required":true,
+            "description": "ID da página do Facebook",
+            "schema":{"type":"string"},
+            "example": "795021823690841"
+          } 
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { 
+                "type": "array", 
+                "items": { "$ref": "#/components/schemas/PagePost" },
+                "minItems": 1,
+                "maxItems": 10
+              },
+              "example": [
+                {"message": "Post 1 do teste em lote 📝"},
+                {"message": "Post 2 do teste em lote 🚀"},
+                {"message": "Post 3 do teste em lote ✅"}
+              ]
+            }
+          }
+        },
+        "responses": { 
+          "201": { 
+            "description": "Postagens criadas com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PostResponse"
+                  }
+                },
+                "example": [
+                  {"id": "795021823690841_122112213224990091"},
+                  {"id": "795021823690841_122112213224990092"},
+                  {"id": "795021823690841_122112213224990093"}
+                ]
+              }
+            }
+          }, 
+          "400": {
+            "description": "Array de postagens inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": { 
+            "description": "Token de autenticação inválido ou ausente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }, 
+          "429": { 
+            "description": "Rate limit do Facebook atingido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [ { "bearerAuth": [] } ]
+      }
+    },
+    "/webhooks/facebook": {
+      "get": { 
+        "summary": "Verificar webhook do Facebook", 
+        "description": "Endpoint usado pelo Facebook para verificar a configuração do webhook",
+        "tags": ["Webhooks"],
+        "parameters": [ 
+          {
+            "name":"hub.mode",
+            "in":"query",
+            "required": true,
+            "description": "Modo de verificação (sempre 'subscribe')",
+            "schema":{"type":"string"},
+            "example": "subscribe"
+          }, 
+          {
+            "name":"hub.verify_token",
+            "in":"query",
+            "required": true,
+            "description": "Token de verificação configurado no Facebook",
+            "schema":{"type":"string"}
+          }, 
+          {
+            "name":"hub.challenge",
+            "in":"query",
+            "required": true,
+            "description": "Challenge enviado pelo Facebook",
+            "schema":{"type":"string"}
+          } 
+        ], 
+        "responses": { 
+          "200": { 
+            "description": "Challenge retornado com sucesso",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }, 
+          "403": { 
+            "description": "Token de verificação inválido" 
+          } 
+        } 
+      },
+      "post": { 
+        "summary": "Receber evento de webhook", 
+        "description": "Recebe eventos do Facebook (comentários, mensagens, etc.) e os armazena no banco de dados",
+        "tags": ["Webhooks"],
         "requestBody": {
           "required": true,
           "content": {
@@ -21,113 +377,449 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "client_id": { "type": "string" },
-                  "client_secret": { "type": "string" }
-                },
-                "required": ["client_id", "client_secret"]
-              }
-            }
-          }
-        },
-        "responses": { "200": { "description": "JWT issued" }, "401": { "description": "Invalid credentials" } }
-      }
-    },
-    "/auth/facebook/login": { "get": { "summary": "Start Facebook OAuth", "parameters": [ {"name":"state","in":"query","schema":{"type":"string"}} ], "responses": { "302": { "description": "Redirect to Facebook" } } } },
-    "/auth/facebook/callback": { "get": { "summary": "Facebook OAuth callback", "responses": { "200": { "description": "Done" } } } },
-    "/posts/page/{pageId}": {
-      "post": {
-        "summary": "Create a page post",
-        "parameters": [ {"name":"pageId","in":"path","required":true,"schema":{"type":"string"}} ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "message": { "type": "string" },
-                  "link": { "type": "string" },
-                  "mediaUrl": { "type": "string" }
+                  "object": {
+                    "type": "string",
+                    "example": "page"
+                  },
+                  "entry": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
                 }
               }
             }
           }
         },
-        "responses": { "201": { "description": "Created" }, "401": { "description": "Unauthorized" }, "429": { "description": "Rate limited" } },
-        "security": [ { "bearerAuth": [] } ]
-      }
-    },
-    "/posts/page/{pageId}/bulk": {
-      "post": {
-        "summary": "Create multiple page posts",
-        "parameters": [ {"name":"pageId","in":"path","required":true,"schema":{"type":"string"}} ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PagePost" } }
+        "responses": { 
+          "200": { 
+            "description": "Evento processado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "received": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
             }
-          }
-        },
-        "responses": { "201": { "description": "Created" }, "401": { "description": "Unauthorized" }, "429": { "description": "Rate limited" } },
-        "security": [ { "bearerAuth": [] } ]
+          }, 
+          "401": { 
+            "description": "Assinatura do webhook inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          } 
+        } 
       }
-    },
-    "/webhooks/facebook": {
-      "get": { "summary": "Verify webhook", "parameters": [ {"name":"hub.mode","in":"query","schema":{"type":"string"}}, {"name":"hub.verify_token","in":"query","schema":{"type":"string"}}, {"name":"hub.challenge","in":"query","schema":{"type":"string"}} ], "responses": { "200": { "description": "Challenge" }, "403": { "description": "Forbidden" } } },
-      "post": { "summary": "Receive webhook event", "responses": { "200": { "description": "Accepted" }, "401": { "description": "Invalid signature" } } }
     }
     ,
     "/webhooks/events": {
       "get": {
-        "summary": "List stored webhook events",
+        "summary": "Listar eventos de webhook",
+        "description": "Lista eventos de webhook armazenados no banco de dados",
+        "tags": ["Webhooks"],
         "parameters": [
-          {"name":"pageId","in":"query","schema":{"type":"string"}},
-          {"name":"since","in":"query","schema":{"type":"string","format":"date-time"}},
-          {"name":"until","in":"query","schema":{"type":"string","format":"date-time"}},
-          {"name":"limit","in":"query","schema":{"type":"integer","default":50}}
+          {
+            "name":"pageId",
+            "in":"query",
+            "description": "Filtrar por ID da página",
+            "schema":{"type":"string"}
+          },
+          {
+            "name":"since",
+            "in":"query",
+            "description": "Data inicial (ISO 8601)",
+            "schema":{"type":"string","format":"date-time"}
+          },
+          {
+            "name":"until",
+            "in":"query",
+            "description": "Data final (ISO 8601)",
+            "schema":{"type":"string","format":"date-time"}
+          },
+          {
+            "name":"limit",
+            "in":"query",
+            "description": "Número máximo de eventos",
+            "schema":{"type":"integer","default":50,"minimum":1,"maximum":100}
+          }
         ],
-        "responses": { "200": { "description": "Events" }, "401": { "description": "Unauthorized" } },
+        "responses": { 
+          "200": { 
+            "description": "Lista de eventos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {"type": "string"},
+                      "eventType": {"type": "string"},
+                      "createdAt": {"type": "string", "format": "date-time"}
+                    }
+                  }
+                }
+              }
+            }
+          }, 
+          "401": { 
+            "description": "Não autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          } 
+        },
         "security": [ { "bearerAuth": [] } ]
       }
     },
     "/webhooks/events/{id}": {
       "get": {
-        "summary": "Get event by ID",
-        "parameters": [ {"name":"id","in":"path","required":true,"schema":{"type":"string"}} ],
-        "responses": { "200": { "description": "Event" }, "401": { "description": "Unauthorized" }, "404": { "description": "Not found" } },
+        "summary": "Obter evento por ID",
+        "description": "Retorna detalhes de um evento específico de webhook",
+        "tags": ["Webhooks"],
+        "parameters": [ 
+          {
+            "name":"id",
+            "in":"path",
+            "required":true,
+            "description": "ID único do evento",
+            "schema":{"type":"string"}
+          } 
+        ],
+        "responses": { 
+          "200": { 
+            "description": "Detalhes do evento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "string"},
+                    "eventType": {"type": "string"},
+                    "payload": {"type": "object"},
+                    "createdAt": {"type": "string", "format": "date-time"}
+                  }
+                }
+              }
+            }
+          }, 
+          "401": { 
+            "description": "Não autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }, 
+          "404": { 
+            "description": "Evento não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          } 
+        },
         "security": [ { "bearerAuth": [] } ]
       }
     }
     ,
-    "/privacy": { "get": { "summary": "Privacy policy HTML", "responses": { "200": { "description": "HTML" } } } },
+    "/privacy": { 
+      "get": { 
+        "summary": "Política de privacidade", 
+        "description": "Retorna a página HTML com a política de privacidade do serviço",
+        "tags": ["Legal"],
+        "responses": { 
+          "200": { 
+            "description": "Página HTML da política de privacidade",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          } 
+        } 
+      } 
+    },
     "/user/{id}": {
       "delete": {
-        "summary": "Public data deletion endpoint",
-        "parameters": [ {"name":"id","in":"path","required":true,"schema":{"type":"string"}} ],
-        "responses": { "204": { "description": "Deleted" }, "404": { "description": "Not found" } }
+        "summary": "Excluir dados do usuário",
+        "description": "Endpoint público para exclusão de dados do usuário (LGPD/GDPR)",
+        "tags": ["Data Privacy"],
+        "parameters": [ 
+          {
+            "name":"id",
+            "in":"path",
+            "required":true,
+            "description": "ID do usuário para exclusão",
+            "schema":{"type":"string"}
+          } 
+        ],
+        "responses": { 
+          "204": { 
+            "description": "Dados excluídos com sucesso" 
+          }, 
+          "404": { 
+            "description": "Usuário não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          } 
+        }
       }
+    },
+    "/facebook/data_deletion/instructions": { 
+      "get": { 
+        "summary": "Instruções de exclusão de dados", 
+        "description": "Retorna instruções para o Facebook sobre como excluir dados do usuário",
+        "tags": ["Data Privacy"],
+        "responses": { 
+          "200": { 
+            "description": "Instruções em formato JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {"type": "string"},
+                    "confirmation_code": {"type": "string"}
+                  }
+                }
+              }
+            }
+          } 
+        } 
+      } 
+    },
+    "/facebook/data_deletion": { 
+      "post": { 
+        "summary": "Callback de exclusão do Facebook", 
+        "description": "Recebe requisições de exclusão de dados do Facebook via signed_request",
+        "tags": ["Data Privacy"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "signed_request": {
+                    "type": "string",
+                    "description": "Requisição assinada do Facebook"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": { 
+          "200": { 
+            "description": "URL de confirmação retornada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {"type": "string"},
+                    "confirmation_code": {"type": "string"}
+                  }
+                }
+              }
+            }
+          } 
+        } 
+      } 
+    },
+    "/facebook/data_deletion/status": { 
+      "get": { 
+        "summary": "Status da exclusão de dados", 
+        "description": "Verifica o status de uma requisição de exclusão de dados",
+        "tags": ["Data Privacy"],
+        "parameters": [ 
+          {
+            "name":"id",
+            "in":"query",
+            "required": true,
+            "description": "ID da requisição de exclusão",
+            "schema":{"type":"string"}
+          } 
+        ], 
+        "responses": { 
+          "200": { 
+            "description": "Status da exclusão",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "completed_at": {"type": "string", "format": "date-time"}
+                  }
+                }
+              }
+            }
+          } 
+        } 
+      } 
     }
-    ,
-    "/facebook/data_deletion/instructions": { "get": { "summary": "Facebook data deletion instructions", "responses": { "200": { "description": "JSON" } } } },
-    "/facebook/data_deletion": { "post": { "summary": "Facebook data deletion callback (signed_request)", "responses": { "200": { "description": "Confirmation URL" } } } },
-    "/facebook/data_deletion/status": { "get": { "summary": "Facebook data deletion status", "parameters": [ {"name":"id","in":"query","schema":{"type":"string"}} ], "responses": { "200": { "description": "JSON" } } } }
   },
   "components": {
     "schemas": {
       "PagePost": {
         "type": "object",
         "properties": {
-          "message": { "type": "string" },
-          "link": { "type": "string" },
-          "mediaUrl": { "type": "string" }
+          "message": { 
+            "type": "string", 
+            "description": "Texto da postagem",
+            "example": "🚀 Teste do microserviço Facebook Connect!"
+          },
+          "link": { 
+            "type": "string", 
+            "format": "uri",
+            "description": "URL para compartilhar na postagem",
+            "example": "https://github.com"
+          },
+          "mediaUrl": { 
+            "type": "string", 
+            "format": "uri",
+            "description": "URL da imagem ou vídeo para postar",
+            "example": "https://example.com/image.jpg"
+          }
         }
+      },
+      "PostResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID único da postagem no Facebook",
+            "example": "795021823690841_122112213224990091"
+          }
+        },
+        "required": ["id"]
+      },
+      "ClientCredentials": {
+        "type": "object",
+        "properties": {
+          "client_id": { 
+            "type": "string",
+            "description": "ID do cliente/sistema",
+            "example": "test-client-id"
+          },
+          "client_secret": { 
+            "type": "string",
+            "description": "Chave secreta do cliente",
+            "example": "test-client-secret"
+          }
+        },
+        "required": ["client_id", "client_secret"]
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "Token JWT para autenticação",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "token_type": {
+            "type": "string",
+            "description": "Tipo do token",
+            "example": "Bearer"
+          }
+        },
+        "required": ["access_token", "token_type"]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Status geral do serviço",
+            "example": "ok"
+          }
+        },
+        "required": ["status"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Código do erro",
+            "example": "INVALID_CREDENTIALS"
+          },
+          "message": {
+            "type": "string",
+            "description": "Mensagem descritiva do erro",
+            "example": "Invalid client credentials"
+          }
+        },
+        "required": ["error"]
       }
     },
     "securitySchemes": {
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "bearerFormat": "JWT"
+        "bearerFormat": "JWT",
+        "description": "Token JWT obtido através do endpoint /auth"
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "System",
+      "description": "Endpoints de sistema e monitoramento"
+    },
+    {
+      "name": "Authentication", 
+      "description": "Autenticação de clientes e geração de tokens JWT"
+    },
+    {
+      "name": "Facebook OAuth",
+      "description": "Fluxo de autorização OAuth2 com Facebook. Permite que usuários autorizem o acesso às suas páginas do Facebook para postagens automatizadas."
+    },
+    {
+      "name": "Posts",
+      "description": "Criação e gerenciamento de postagens no Facebook"
+    },
+    {
+      "name": "Webhooks",
+      "description": "Recebimento e consulta de eventos do Facebook"
+    },
+    {
+      "name": "Data Privacy",
+      "description": "Endpoints para conformidade com LGPD/GDPR"
+    },
+    {
+      "name": "Legal",
+      "description": "Documentos legais e políticas"
+    }
+  ]
 }
