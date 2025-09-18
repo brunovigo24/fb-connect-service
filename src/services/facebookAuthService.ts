@@ -65,9 +65,12 @@ export async function handleFacebookCallback(code: string): Promise<{ user: User
   const tokenRepo = AppDataSource.getRepository(Token);
   const pageRepo = AppDataSource.getRepository(Page);
 
-  let user = await userRepo.findOne({ where: { email: email || `${fbId}@facebook.local` } });
+  let user = await userRepo.findOne({ where: [{ facebookId: fbId }, { email: email || `${fbId}@facebook.local` }] });
   if (!user) {
-    user = userRepo.create({ email: email || `${fbId}@facebook.local`, name });
+    user = userRepo.create({ email: email || `${fbId}@facebook.local`, name, facebookId: fbId });
+    await userRepo.save(user);
+  } else if (!user.facebookId) {
+    user.facebookId = fbId;
     await userRepo.save(user);
   }
 

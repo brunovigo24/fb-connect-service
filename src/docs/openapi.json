@@ -97,6 +97,19 @@
         "security": [ { "bearerAuth": [] } ]
       }
     }
+    ,
+    "/privacy": { "get": { "summary": "Privacy policy HTML", "responses": { "200": { "description": "HTML" } } } },
+    "/user/{id}": {
+      "delete": {
+        "summary": "Public data deletion endpoint",
+        "parameters": [ {"name":"id","in":"path","required":true,"schema":{"type":"string"}} ],
+        "responses": { "204": { "description": "Deleted" }, "404": { "description": "Not found" } }
+      }
+    }
+    ,
+    "/facebook/data_deletion/instructions": { "get": { "summary": "Facebook data deletion instructions", "responses": { "200": { "description": "JSON" } } } },
+    "/facebook/data_deletion": { "post": { "summary": "Facebook data deletion callback (signed_request)", "responses": { "200": { "description": "Confirmation URL" } } } },
+    "/facebook/data_deletion/status": { "get": { "summary": "Facebook data deletion status", "parameters": [ {"name":"id","in":"query","schema":{"type":"string"}} ], "responses": { "200": { "description": "JSON" } } } }
   },
   "components": {
     "schemas": {
